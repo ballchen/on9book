@@ -1,0 +1,20 @@
+{
+  "name": "on9book",
+  "version": "1.0.0",
+  "description": "on9 to NTUIM104",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "ballchen",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.8.5",
+    "cors": "^2.4.1",
+    "express-resource": "^1.0.0",
+    "underscore": "^1.6.0",
+    "mongoose": "^3.8.15",
+    "body-parser": "^1.6.5",
+    "request": "^2.40.0"
+  }
+}
