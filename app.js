@@ -4,6 +4,8 @@ var cors = require('cors');
 var mongoose = require('mongoose');
 var _ = require('underscore');
 var request = require("request");
+var multipart = require('connect-multiparty');
+var multipartMiddleware = multipart();
 
 var mongo = {
 	host: "127.0.0.1",
@@ -20,12 +22,17 @@ var Image = mongoose.model("Image", { bookid: {type:String, required:true}, link
 
 var app = express();
 
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(bodyParser.json());
+// app.use(bodyParser.urlencoded({ extended: false }));
+// app.use(bodyParser.json());
+app.use(multipartMiddleware);
 app.use(cors());
 
 app.get("/",function(req,res){
 	res.send("hello on9!");
+})
+
+app.post("/",function(req,res){
+	res.json(req.body);
 })
 
 app.get('/book',function(req, res){
@@ -100,6 +107,14 @@ app.get("/image/:bookid",function(req, res){
 	Image.find({bookid: req.params.bookid}).exec(function(err, results){
 		if(err) return res.json({success:false, msg:err});
 		res.json({success:true, data: results});
+	})
+})
+
+app.delete("/image/:id",function(req, res){
+	if(!req.params.id) return res.json({success: false, msg:"missing params."})
+	Image.remove({ id: req.params.id}).exec(function(err){
+		if(err) return res.json({success:false, msg: err});
+		res.json({success: true});
 	})
 })
 
