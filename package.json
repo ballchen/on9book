@@ -8,6 +8,7 @@
   },
   "author": "ballchen",
   "license": "ISC",
+  "private": true,
   "dependencies": {
     "express": "^4.8.5",
     "cors": "^2.4.1",

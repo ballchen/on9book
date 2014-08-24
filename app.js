@@ -10,6 +10,7 @@ var mongo = {
 	db: "on9book"
 };
 var port = 9000;
+var fs = require('fs');
 
 
 mongoose.connect('mongodb://'+mongo.host+'/'+mongo.db);
@@ -70,7 +71,7 @@ app.delete('/book/:id',function(req, res){
 //image
 app.post('/image/:bookid/:num',function(req, res){
 	if(!req.params.bookid || !req.params.num) return res.json({success:false, msg: "missing params."})
-		
+
 	var imagedata = req.body.image;
 	request({
 		method: "POST",
@@ -92,7 +93,7 @@ app.post('/image/:bookid/:num',function(req, res){
 			if(err) return res.json({success:false, msg:err});
 			res.json({success:true, data: result});
 		})
-		
+
 	})
 
 })
@@ -102,6 +103,18 @@ app.get("/image/:bookid",function(req, res){
 		if(err) return res.json({success:false, msg:err});
 		res.json({success:true, data: results});
 	})
+})
+
+app.get("/convert", function(req, res){
+	var dir = __dirname + "/img/"
+	for (var i = 1; i <= 16; i++) {
+		var file = dir + i + '.png';
+		fs.readFile(file, function (err, data) {
+		  if (err) throw err;
+	        	  var img = new Buffer(data, 'binary').toString('base64');
+		  request.post('http://127.0.0.1:9000/image/53f95f18508d243956283438/'+i).form({image:img})
+		});
+	};
 })
 
 console.log("Start On9 at "+port);

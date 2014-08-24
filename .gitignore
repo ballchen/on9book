@@ -1,0 +1,52 @@
+########################
+# sails
+########################
+.sails
+.waterline
+.rigging
+.tmp
+
+
+########################
+# node.js / npm
+########################
+lib-cov
+*.seed
+*.log
+*.csv
+*.dat
+*.out
+*.pid
+*.gz
+*.png
+*.jpg
+img
+
+pids
+logs
+results
+
+node_modules
+
+npm-debug.log
+
+
+########################
+# misc / editors
+########################
+*~
+*#
+.DS_STORE
+.DS_Store
+.netbeans
+nbproject
+.idea
+.gitignore
+
+
+########################
+# local config
+########################
+config/local.js
+
+
