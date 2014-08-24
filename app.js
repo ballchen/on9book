@@ -66,11 +66,9 @@ app.delete('/book/:id',function(req, res){
 	})
 })
 
-
-//image
 app.post('/image/:bookid/:num',function(req, res){
 	if(!req.params.bookid || !req.params.num) return res.json({success:false, msg: "missing params."})
-		
+
 	var imagedata = req.body.image;
 	request({
 		method: "POST",
