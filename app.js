@@ -30,7 +30,7 @@ app.get("/",function(req,res){
 
 
 app.get('/book',function(req, res){
-	Bookinfo.find().exec(function(err , results){
+	Bookinfo.find().sort({num: 1}).exec(function(err , results){
 		if(err) return res.json({success: false, msg: err});
 		res.json({success: true, data: results});
 	});
