@@ -16,7 +16,7 @@ var fs = require('fs');
 mongoose.connect('mongodb://'+mongo.host+'/'+mongo.db);
 
 var Bookinfo = mongoose.model('Bookinfo', { name: String, createAt: {type: Date, default: Date.now}, author: String});
-var Image = mongoose.model("Image", { bookid: {type:String, required:true}, link: {type:String, required:true}, deletehash: String, id:{type:String, required:true}});
+var Image = mongoose.model("Image", { bookid: {type:String, required:true}, link: {type:String, required:true}, deletehash: String, num:Number, id:{type:String, required:true}});
 
 var app = express();
 
