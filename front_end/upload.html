@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="uploadModule">
+<head>
+  <meta charset="utf-8">
+  <title>File API</title>
+
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<style>
+    div{
+        outline: 0;
+    }
+    .icon{
+        cursor: pointer;
+        opacity: 0.8;
+    }
+    .icon:hover{
+        opacity: 1;
+    }
+    .selected{
+      border: 3px solid #669;
+-webkit-border-radius: 8px;
+-moz-border-radius: 8px;
+border-radius: 8px;
+-webkit-box-shadow: #666 0px 2px 3px;
+-moz-box-shadow: #666 0px 2px 3px;
+box-shadow: #666 0px 2px 3px;
+    }
+</style>
+<body ng-controller="uploadController" >
+  <div id="page-wrapper">
+files_num:{{files_num}}
+total:{{total}}
+current:{{current}}
+            <h1>Image File Reader</h1>
+              Select an image file:
+                  <div style="cursor: pointer; width:100px; height:100px; border: 2px solid black;" ng-file-select="onFileSelect($files)" data-multiple="true" accept="image/*">
+                      <div class="fa fa-plus-square"  style="width:100px; height:100px;font-size:5em; display:block;" ></div>
+                  </div>
+            <button ng-click="send(0, current, 0)">send</button>
+            <div  ng-repeat="img in imgs | limitTo:50 track by $index">
+                  <!--
+x-lvl-draggable="true"
+                  x-lvl-drop-target="true"
+                  x-on-drop="dropped(dragEl, dropEl, imgs, files)"
+                  tabIndex="{{ $index }}"
+                  -->
+                  <div
+                  style="cursor: pointer; width:100px; height:100px;"
+                  ng-style=" {'background-image': 'url('+img[0]+')' }"
+                  ng-class="{ 'selected' : selected[$index] }"
+                  ng-click="select($index)">
+                  </div>
+                  <i  style="font-size:2em; display:block;width:1em;" ng-click="del($index, imgs, selected)" class="glyphicon glyphicon-remove icon" ></i>
+                  {{$index}}
+            </div>
+  </div>
+    {{selected_now}}
+    {{selected}}
+    {{files}}
+    {{imgs}}
+
+<script src="js/angular-file-upload-shim.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.19/angular.min.js"></script>
+<script src="js/angular-file-upload.min.js"></script>
+<script src="js/lvl-uuid.js"></script>
+<script src="js/lvl-drag-drop.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.19/angular-route.js"></script>
+<script src="js/mousetrap.min.js"></script>
+<script src="js/hotkeys.js"></script>
+<script src="http://underscorejs.org/underscore-min.js"></script>
+<script src="images.js"></script>
+<link href="css/bootstrap.min.css" rel="stylesheet">
+<link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet">
+</body>
+</html>

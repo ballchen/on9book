@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html ng-app="bookModule">
+<head>
+    <title>ON9 book</title>
+    <meta charset="utf8">
+</head>
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.19/angular.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.19/angular-route.js"></script>
+<script src="js/prefixfree.min.js"></script>
+<script src="js/mousetrap.min.js"></script>
+<script src="js/hotkeys.js"></script>
+<link href="css/bootstrap.min.css" rel="stylesheet">
+<style>
+
+
+    .wraper{
+        position:relative;
+        width:1000px;
+        height:500px;
+        top:50px;
+        margin: auto;
+    }
+    .page{/*紙物件*/
+        position:relative;
+        float:left;
+        width:500px;
+        height:500px;
+        background-color: white;/*避免因透明看到其他圖層*/
+    }
+    .floating_page, .temp{/*流動頁面*/
+        position:absolute;
+    }
+    .at_left{
+        left:0%;
+    }
+    .at_right{
+        left:50%;
+    }
+    .front{/*紙的正面*/
+        position:absolute;
+        width:500px;
+        height:500px;
+        background-size:100%;
+        background-repeat:no-repeat;
+    }
+    .back{/*紙的背面*/
+        position:absolute;
+        width:500px;
+        height:500px;
+        background-size:100%;
+        background-repeat:no-repeat;
+        transform: rotateY(90deg);/*預設背面不會顯示*/
+    }
+    .highest_z{
+        z-index: 30;/*封面或封底*/
+    }
+    .higher_z{
+        z-index: 20;/*浮動頁面*/
+    }
+    .lower_z{
+        z-index: 10;/*一般頁面*/
+    }
+    /*翻頁按鈕*/
+    .back_btn{
+        position: absolute;
+        top: 211px;
+        left: -1em;
+        z-index: 999;
+        opacity: 0.3;
+        cursor: pointer;
+        font-size: 3em;
+
+    }
+    .next_btn{
+        position: absolute;
+        top: 210px;
+        right: -1em;
+        z-index: 999;
+        opacity: 0.3;
+        cursor: pointer;
+        font-size: 3em;
+    }
+    .back_btn:hover, .next_btn:hover{
+        opacity: 1;
+    }
+
+/*動畫class*/
+    .turn_left{
+        transform-origin: 0% 0%;
+        animation:page_turn_left 2s forwards;
+    }
+    .turn_right{
+        transform-origin: 100% 0%;
+        animation:page_turn_right 2s forwards;
+    }
+    .front_turning{
+        animation:front_content 2s forwards;
+    }
+    .back_turning{
+        animation:back_content 2s forwards;
+    }
+
+/*二次觸發動畫*/
+    .turn_left2{
+        transform-origin: 0% 0%;
+        animation:page_turn_left2 2s forwards;
+    }
+    .turn_right2{
+        transform-origin: 100% 0%;
+        animation:page_turn_right2 2s forwards;
+    }
+    .front_turning2{
+        animation:front_content2 2s forwards;
+    }
+    .back_turning2{
+        animation:back_content2 2s forwards;
+    }
+/*動畫設定*/
+    @keyframes page_turn_left {
+        0% { transform: rotateY(0deg); }
+        50% { transform: rotateY(-90deg);}
+        100% { transform: rotateY(-180deg);}
+    }
+
+    @keyframes page_turn_right {
+        0% { transform: rotateY(0deg); }
+        50% { transform: rotateY(90deg);}
+        100% { transform: rotateY(180deg);}
+    }
+
+    @keyframes front_content {
+        0% { transform: rotateY(0deg);}
+        49% { transform: rotateY(0deg);}
+        50% { transform: rotateY(90deg);}/*翻面後，正面會消失*/
+        100% { transform: rotateY(90deg);}
+    }
+    @keyframes back_content {
+        0% { transform: rotateY(90deg);}
+        49% { transform: rotateY(90deg);}
+        50% { transform: rotateY(180deg);}/*翻面後，背面會顯現*/
+        100% { transform: rotateY(180deg);}
+    }
+/*二次觸發動畫*/
+
+    @keyframes page_turn_left2 {
+        0% { transform: rotateY(0deg); }
+        50% { transform: rotateY(-90deg);}
+        100% { transform: rotateY(-180deg);}
+    }
+
+    @keyframes page_turn_right2 {
+        0% { transform: rotateY(0deg); }
+        50% { transform: rotateY(90deg);}
+        100% { transform: rotateY(180deg);}
+    }
+
+    @keyframes front_content2 {
+        0% { transform: rotateY(0deg);}
+        49% { transform: rotateY(0deg);}
+        50% { transform: rotateY(90deg);}/*翻面後，正面會消失*/
+        100% { transform: rotateY(90deg);}
+    }
+    @keyframes back_content2 {
+        0% { transform: rotateY(90deg);}
+        49% { transform: rotateY(90deg);}
+        50% { transform: rotateY(180deg);}/*翻面後，背面會顯現*/
+        100% { transform: rotateY(180deg);}
+    }
+</style>
+<body ng-controller="bookController">
+<section  class="wraper">
+
+
+<!--右翻
+<section class="page turn_right higher_z">
+    <div class="front front_turning" style="background-image:url('img/1.png')"></div>
+    <div class="back back_turning" style="background-image:url('img/2.png')"></div>
+</section>
+<section class="page lower_z">
+    <div class="front" style="background-image:url('img/3.png')"></div>
+    <div class="back" style="background-image:url('img/4.png')"></div>
+</section>
+-->
+
+
+<!--
+左翻
+<section class="page lower_z">
+    <div class="front " style="background-image:url('img/1.png')"></div>
+    <div class="back " style="background-image:url('img/2.png')"></div>
+</section>
+<section class="page turn_left higher_z">
+    <div class="front front_turning" style="background-image:url('img/3.png')"></div>
+    <div class="back back_turning" style="background-image:url('img/4.png')"></div>
+</section>
+
+-->
+    <section class="page lower_z" >
+        <div class="front" ng-style=" {'background-image': 'url(\''+state.left_front_pic+'\')' }"></div>
+        <div class="back"  ng-style=" {'background-image': 'url(\''+state.left_back_pic+'\')' }"></div>
+    </section>
+
+    <section class="page temp higher_z" ng-class="state.temp_position">
+        <div class="front" ng-style=" {'background-image': 'url(\''+state.temp_front_pic+'\')' }"></div>
+        <div class="back" ng-style=" {'background-image': 'url(\''+state.temp_back_pic+'\')' }"></div>
+    </section>
+
+    <section class="page floating_page higher_z" ng-class="[state.floating_page_turning, state.floating_position]">
+        <div class="front" ng-style=" {'background-image': 'url(\''+state.floating_front_pic+'\')' }" ng-class="state.floating_front_turning"></div>
+        <div class="back" ng-style=" {'background-image': 'url(\''+state.floating_back_pic+'\')' }" ng-class="state.floating_back_turning"></div>
+    </section>
+
+    <section class="page lower_z">
+        <div class="front" ng-style=" {'background-image': 'url(\''+state.right_front_pic+'\')' }"></div>
+        <div class="back" ng-style=" {'background-image': 'url(\''+state.right_back_pic+'\')' }"></div>
+    </section>
+
+
+<div class="glyphicon glyphicon-chevron-left back_btn" ng-click="backPage()"></div>
+<div class="glyphicon glyphicon-chevron-right next_btn" ng-click="nextPage()"></div>
+
+</section>
+
+
+
+</body>
+<script>
+
+    var bookModule = angular.module("bookModule", ['ngRoute', 'cfp.hotkeys'] );
+    var max = 0;
+    var on9_on = 0;
+    var site = "http://localhost:9000/image/53f95f18508d243956283438";
+
+
+    bookModule.controller('bookController', ['$scope', 'hotkeys', '$http', function($scope, hotkeys, $http) {
+
+
+$scope.imgs=["data:image/png;base64,"];
+
+
+
+        //目前無封面設計
+        $scope.state = {
+            //目前頁數
+            current: 1,
+            //各紙目前圖檔
+            /*
+            left_front_pic: 1,
+            left_back_pic: 0,
+            temp_front_pic: 1,
+            temp_back_pic: 0,
+            floating_front_pic: 2,
+            floating_back_pic: 3,
+            right_front_pic: 2,
+            right_back_pic: 3,
+            */
+            left_front_pic: "data:image/png;base64,",
+            left_back_pic: "data:image/png;base64,",
+            temp_front_pic: "data:image/png;base64,",
+            temp_back_pic: "data:image/png;base64,",
+            floating_front_pic: "data:image/png;base64,",
+            floating_back_pic: "data:image/png;base64,",
+            right_front_pic: "data:image/png;base64,",
+            right_back_pic: "data:image/png;base64,",
+            //設定翻頁動畫class
+            left_page_turning: '',
+            floating_page_turning: '',
+            right_page_turning: '',
+            left_front_turning: '',
+            left_back_turning: '',
+            floating_front_turning: '',
+            floating_back_turning: '',
+            right_front_turning: '',
+            right_back_turning: '',
+            //temp和floating的位置
+            temp_position: 'at_left',
+            floating_position: 'at_right',
+            //觸發二次翻頁動畫
+            page_turning_second: 0,
+            //抵達第一頁, 最後一頁
+            leftmost: 1,
+            rightmost: 0,
+        };
+
+
+        $scope.nextPage = function() {
+                //是否翻到最後一頁
+                if($scope.state.current +1 >= max)
+                {
+                    $scope.state.rightmost = 1;
+                }
+                //翻到最後一頁又翻頁的話開啓on9
+                if($scope.state.rightmost == 1 && on9_on == 0)
+                {
+                    on9_on=1;
+                    on9();
+                }
+                //如果還沒翻到最後一頁
+                if( $scope.state.rightmost != 1 )
+                {
+                    $scope.state.current = $scope.state.current + 2;
+                    $scope.state.leftmost = 0;//目前不是在第一頁
+                    //如果觸發二次翻頁
+                    if( $scope.state.page_turning_second == 1 )
+                    {
+                        //設定動畫
+                        $scope.state.floating_page_turning = 'turn_left2';
+                        $scope.state.floating_front_turning = 'front_turning2';
+                        $scope.state.floating_back_turning = 'back_turning2';
+                        //記錄觸發翻頁
+                        $scope.state.page_turning_second = 0;
+                    }
+                    else
+                    {
+                        //設定動畫
+                        $scope.state.floating_page_turning = 'turn_left';
+                        $scope.state.floating_front_turning = 'front_turning';
+                        $scope.state.floating_back_turning = 'back_turning';
+                        //記錄觸發翻頁
+                        $scope.state.page_turning_second = 1;
+                    }
+                    //設定位置
+                    $scope.state.temp_position = 'at_left';
+                    $scope.state.floating_position = 'at_right';
+                    //設定圖檔
+                    $scope.state.temp_front_pic = $scope.state.left_front_pic;
+                    $scope.state.temp_back_pic = $scope.state.left_back_pic;
+                    $scope.state.left_front_pic = $scope.imgs[$scope.state.current]; //$scope.state.left_front_pic + 2;
+                    $scope.state.left_back_pic = $scope.imgs[$scope.state.current -1 ];  //$scope.state.left_back_pic + 2;
+                    $scope.state.floating_front_pic = $scope.state.right_front_pic;
+                    $scope.state.floating_back_pic = $scope.state.right_back_pic;
+                    $scope.state.right_front_pic = $scope.imgs[$scope.state.current+1]; //$scope.state.right_front_pic + 2;
+                    $scope.state.right_back_pic = $scope.imgs[$scope.state.current+2]; //$scope.state.right_back_pic + 2;
+                }//end if
+console.log($scope.state.right_front_pic);
+console.log($scope.state.right_back_pic);
+        };//end nextPage()
+
+        $scope.backPage = function() {
+
+                //如果不在翻到第一頁
+                if( $scope.state.leftmost != 1 )
+                {
+                    $scope.state.current = $scope.state.current - 2;
+                    $scope.state.rightmost = 0;//目前不是在最後一頁
+                    //如果觸發二次翻頁
+                    if( $scope.state.page_turning_second == 1 )
+                    {
+                        //設定動畫
+                        $scope.state.floating_page_turning = 'turn_right2';
+                        $scope.state.floating_front_turning = 'front_turning2';
+                        $scope.state.floating_back_turning = 'back_turning2';
+                        //記錄觸發翻頁
+                        $scope.state.page_turning_second = 0;
+                    }
+                    else
+                    {
+                        //設定動畫
+                        $scope.state.floating_page_turning = 'turn_right';
+                        $scope.state.floating_front_turning = 'front_turning';
+                        $scope.state.floating_back_turning = 'back_turning';
+                        //記錄觸發翻頁
+                        $scope.state.page_turning_second = 1;
+                    }
+                    //設定位置
+                    $scope.state.temp_position = 'at_right';
+                    $scope.state.floating_position = 'at_left';
+                    //設定圖檔
+                    //各紙正反順序稍有不同
+                    $scope.state.floating_front_pic = $scope.state.left_front_pic;
+                    $scope.state.floating_back_pic = $scope.state.left_back_pic;
+                    $scope.state.left_front_pic = $scope.imgs[$scope.state.current]; //$scope.state.left_front_pic - 2;
+                    $scope.state.left_back_pic = $scope.imgs[$scope.state.current-1]; //$scope.state.left_back_pic - 2;
+                    $scope.state.temp_front_pic = $scope.state.right_front_pic;
+                    $scope.state.temp_back_pic = $scope.state.right_back_pic;
+                    $scope.state.right_front_pic = $scope.imgs[$scope.state.current+1]; //$scope.state.right_front_pic - 2;
+                    $scope.state.right_back_pic = $scope.imgs[$scope.state.current+2]; //$scope.state.right_back_pic - 2;
+                }//end if
+                //是否在第一頁
+                if($scope.state.current == 1)
+                {
+                    $scope.state.leftmost = 1;
+                }
+        };//end backPage()
+
+//取得圖片網址
+        $scope.getPic = function(){
+            var i=0;
+            $http({method: 'GET', url: site}).
+            success(function(data, status, headers, config) {
+              // this callback will be called asynchronously
+              // when the response is available
+              while(data.data[i] != undefined)
+              {
+                $scope.imgs.push( data.data[i].link);
+                max +=1;
+                i+=1;
+              }
+              //避免錯誤訊息出現在console
+              $scope.imgs.push("data:image/png;base64,");
+              $scope.imgs.push("data:image/png;base64,");
+              console.log("max is " + max);
+              console.log(data);
+                    $scope.state.left_front_pic = $scope.imgs[1];
+                    $scope.state.left_back_pic = $scope.imgs[0];
+                    $scope.state.temp_front_pic = $scope.imgs[1];
+                    $scope.state.temp_back_pic = $scope.imgs[0];
+                    $scope.state.floating_front_pic = $scope.imgs[2];
+                    $scope.state.floating_back_pic = $scope.imgs[3];
+                    $scope.state.right_front_pic = $scope.imgs[2];
+                    $scope.state.right_back_pic = $scope.imgs[3];
+              //$scope.$apply();
+            }).
+            error(function(data, status, headers, config) {
+              // called asynchronously if an error occurs
+              // or server returns response with an error status.
+              console.log("fail");
+            });
+        };
+$scope.getPic();
+//鍵盤快捷鍵設定
+        hotkeys.add({
+          combo: 'right',
+          description: 'hotkey to next page',
+          callback: function() {
+            $scope.nextPage();
+          }
+        });
+
+        hotkeys.add({
+          combo: 'left',
+          description: 'hotkey to back page',
+          callback: function() {
+            $scope.backPage();
+          }
+        });
+}]);//end controller
+
+</script>
+<script>
+
+
+
+
+</script>
+<script src="http://threejs.org/build/three.min.js"></script>
+        <script src="http://mrdoob.github.com/three.js/examples/fonts/helvetiker_regular.typeface.js"></script>
+        <script>
+
+        function on9 ()
+        {
+            var half_width = 40;
+            var half_height = 40;
+            var txr = THREE.ImageUtils.loadTexture('txr6.jpg');
+            var scene = new THREE.Scene();
+            var camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
+
+            var renderer = new THREE.WebGLRenderer({antialias:false});
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setClearColor( 0xffffff, 1);
+            document.body.appendChild(renderer.domElement);
+
+//////////////////plane
+            var geometry2 = new THREE.Geometry(  );
+            var geometry3 = new THREE.Geometry(  );
+            var geometry4 = new THREE.Geometry(  );
+            var geometry1 = new THREE.Geometry(  );
+            var material1 = new THREE.MeshBasicMaterial({ side: 1,
+        map: txr} );
+
+            var material2 = new THREE.MeshBasicMaterial({ side: 1,
+        map: txr} );
+            var material3 = new THREE.MeshBasicMaterial({ side: 1,
+        map: txr} );
+            var material4 = new THREE.MeshBasicMaterial({ side: 1,
+        map: txr} );
+            camera.position.z = 80;
+
+//---1-----
+geometry1.vertices.push( new THREE.Vector3( -half_width, 0, 0 ) );  // vertex 0
+geometry1.vertices.push( new THREE.Vector3( 0, 0, 0 ) );   // vertex 1
+geometry1.vertices.push( new THREE.Vector3( 0, half_height, 0 ) );   // vertex 2*/
+
+geometry1.vertices.push( new THREE.Vector3( -half_width, half_height, 0 ) );  // vertex 0
+
+
+
+geometry1.faces.push( new THREE.Face3( 0, 1, 2 ) );
+geometry1.faces.push( new THREE.Face3( 0, 3, 2 ) );
+
+//---2-----
+geometry2.vertices.push( new THREE.Vector3( -half_width, 0, 0 ) );  // vertex 0
+geometry2.vertices.push( new THREE.Vector3( 0, 0, 0 ) );   // vertex 1
+geometry2.vertices.push( new THREE.Vector3( 0, half_height, 0 ) );   // vertex 2*/
+
+geometry2.vertices.push( new THREE.Vector3( -half_width, half_height, 0 ) );  // vertex 0
+
+
+
+geometry2.faces.push( new THREE.Face3( 0, 1, 2 ) );
+geometry2.faces.push( new THREE.Face3( 0, 3, 2 ) );
+//---3-----
+geometry3.vertices.push( new THREE.Vector3( -half_width, 0, 0 ) );  // vertex 0
+geometry3.vertices.push( new THREE.Vector3( 0, 0, 0 ) );   // vertex 1
+geometry3.vertices.push( new THREE.Vector3( 0, half_height, 0 ) );   // vertex 2*/
+
+geometry3.vertices.push( new THREE.Vector3( -half_width, half_height, 0 ) );  // vertex 0
+
+
+
+geometry3.faces.push( new THREE.Face3( 0, 1, 2 ) );
+geometry3.faces.push( new THREE.Face3( 0, 3, 2 ) );
+//---4-----
+geometry4.vertices.push( new THREE.Vector3( -half_width, 0, 0 ) );  // vertex 0
+geometry4.vertices.push( new THREE.Vector3( 0, 0, 0 ) );   // vertex 1
+geometry4.vertices.push( new THREE.Vector3( 0, half_height, 0 ) );   // vertex 2*/
+
+geometry4.vertices.push( new THREE.Vector3( -half_width, half_height, 0 ) );  // vertex 0
+
+
+
+geometry4.faces.push( new THREE.Face3( 0, 1, 2 ) );
+geometry4.faces.push( new THREE.Face3( 0, 3, 2 ) );
+//end
+
+
+//------1------
+var uvs = [];
+uvs.push( new THREE.Vector2( 0.5, 0 ) );
+uvs.push( new THREE.Vector2( 1, 0 ) );
+uvs.push( new THREE.Vector2( 1, 0.5 ) );
+uvs.push( new THREE.Vector2( 0.5, 0.5 ) );
+geometry1.faceVertexUvs[ 0 ].push( [ uvs[1], uvs[0], uvs[3] ] );
+geometry1.faceVertexUvs[ 0 ].push( [ uvs[1], uvs[2], uvs[3] ] );
+//------2------
+uvs = [];
+uvs.push( new THREE.Vector2( 0, 0 ) );
+uvs.push( new THREE.Vector2( 0.5, 0 ) );
+uvs.push( new THREE.Vector2( 0.5, 0.5 ) );
+uvs.push( new THREE.Vector2( 0, 0.5 ) );
+geometry2.faceVertexUvs[ 0 ].push( [ uvs[0], uvs[1], uvs[2] ] );
+geometry2.faceVertexUvs[ 0 ].push( [ uvs[0], uvs[3], uvs[2] ] );
+//------3------
+uvs = [];
+uvs.push( new THREE.Vector2( 0, 0.5 ) );
+uvs.push( new THREE.Vector2( 0.5, 0.5 ) );
+uvs.push( new THREE.Vector2( 0.5, 1 ) );
+uvs.push( new THREE.Vector2( 0, 1 ) );
+geometry3.faceVertexUvs[ 0 ].push( [ uvs[3], uvs[2], uvs[1] ] );
+geometry3.faceVertexUvs[ 0 ].push( [ uvs[3], uvs[0], uvs[1] ] );
+//------4------
+uvs = [];
+uvs.push( new THREE.Vector2( 0.5, 0.5 ) );
+uvs.push( new THREE.Vector2( 1, 0.5 ) );
+uvs.push( new THREE.Vector2( 1, 1 ) );
+uvs.push( new THREE.Vector2( 0.5, 1 ) );
+geometry4.faceVertexUvs[ 0 ].push( [ uvs[2], uvs[3], uvs[0] ] );
+geometry4.faceVertexUvs[ 0 ].push( [ uvs[2], uvs[1], uvs[0] ] );
+
+
+var mesh2 = new THREE.Mesh( geometry2, material2 );
+var mesh1 = new THREE.Mesh( geometry1, material1 );
+var mesh3 = new THREE.Mesh( geometry3, material3 );
+var mesh4 = new THREE.Mesh( geometry4, material4 );
+
+//alert(JSON.stringify(mesh2.material.color));
+
+
+//mesh1.material.color.b = 12;
+
+//geometry.position.x = -half_width/2;
+//geometry.position.y = -half_height/2;
+
+var ON9 = new THREE.TextGeometry("ON9", {size:20, height:10});
+var on9material = new THREE.MeshNormalMaterial({ side: THREE.DoubleSide} );
+var on9mesh = new THREE.Mesh( ON9, on9material);
+scene.add( on9mesh );
+
+var incre = Math.PI/60;
+
+            var render = function () {
+                var loop = requestAnimationFrame(render);
+                if(mesh1.rotation.y<Math.PI)
+                {
+                    mesh1.rotation.y+=incre;
+                    mesh4.rotation.y+=incre;
+                }
+                else if(mesh4.rotation.x<Math.PI-0.1)
+                {
+                    //modify
+                    mesh1.rotation.y=Math.PI;
+                    mesh4.rotation.y=Math.PI;
+
+                    mesh3.rotation.x+=incre;
+                    mesh4.rotation.x+=incre;
+                }
+                else{
+                    //modify
+                    mesh3.rotation.x=Math.PI-0.1;
+                    mesh4.rotation.x=Math.PI-0.1;
+
+                    //cancelAnimationFrame(loop);
+                }
+                //camera.rotation.y +=0.03;
+                on9mesh.rotation.x+=0.03;
+                on9mesh.rotation.y+=0.03;
+                on9mesh.rotation.z+=0.03;
+                renderer.render(scene, camera);
+
+
+            };
+            render();
+        }
+        </script>
+</html>
